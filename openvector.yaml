@@ -1,0 +1,62 @@
+data:
+  path: ./data
+
+metrics:
+  velocityMovingAverage: 6
+
+organization:
+  enabled: true
+
+filters:
+  organization: All
+  vertical: All
+  product: All
+  team: All
+
+severity:
+  critical:
+    - Sev1
+    - Critical
+  high:
+    - Sev2
+    - High
+  medium:
+    - Sev3
+    - Medium
+  low:
+    - Sev4
+    - Low
+
+detectionPhases:
+  - Development
+  - System Testing
+  - UAT
+  - Production
+
+productionPhases:
+  - Production
+
+phaseAliases:
+  Requirements: Development
+  Unit Testing: Development
+  Integration Testing: System Testing
+  System Test: System Testing
+
+closedStatuses:
+  - Closed
+  - Resolved
+  - Done
+
+maturity:
+  weights:
+    automationCoverage: 0.25
+    codeCoverage: 0.25
+    codeQuality: 0.25
+    defectLeakage: 0.25
+  leakageZeroScoreAt: 21
+
+codeQuality:
+  weights:
+    maintainability: 0.4
+    security: 0.3
+    vulnerability: 0.3

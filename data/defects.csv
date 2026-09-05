@@ -1,0 +1,35 @@
+id,organization,vertical,product,team,title,severity,created_date,detected_date,resolved_date,detection_phase,customer_reported,found_in_release,scheduled_for_release,status
+D001,Acme,Payments,Checkout,Team Alpha,Timeout on card tokenization,Sev2,2026-05-12,2026-05-14,2026-05-20,System Testing,false,R11,R11,Closed
+D002,Acme,Payments,Checkout,Team Alpha,Duplicate charge on retry,Sev1,2026-05-18,2026-05-21,2026-05-23,Production,true,R11,R11,Closed
+D003,Acme,Payments,Checkout,Team Beta,Wallet button misaligned,Sev4,2026-05-20,2026-05-21,2026-05-28,UAT,false,R11,R11,Closed
+D004,Acme,Payments,Checkout,Team Beta,Promo code rejected for valid SKU,Sev3,2026-05-22,2026-05-24,2026-06-02,Integration Testing,false,R11,R12,Closed
+D005,Acme,Travel,Booking,Team Gamma,Seat map stale after refresh,Sev2,2026-05-25,2026-05-26,2026-06-04,System Testing,false,R11,R11,Closed
+D006,Acme,Travel,Booking,Team Gamma,PNR not issued after payment,Sev1,2026-05-28,2026-05-30,2026-06-01,Production,true,R11,R11,Closed
+D007,Acme,Payments,Checkout,Team Alpha,3DS redirect loop,Sev2,2026-06-02,2026-06-03,2026-06-10,UAT,false,R11,R11,Closed
+D008,Acme,Payments,Checkout,Team Beta,Saved card missing last four,Sev3,2026-06-05,2026-06-06,2026-06-12,Development,false,R11,R11,Resolved
+D009,Acme,Travel,Booking,Team Gamma,Currency conversion off by one,Sev3,2026-06-08,2026-06-09,2026-06-18,Unit Testing,false,R11,R12,Closed
+D010,Acme,Payments,Checkout,Team Alpha,Receipt email not sent,Sev2,2026-06-10,2026-06-12,2026-06-16,Production,true,R11,R11,Closed
+D011,Acme,Payments,Checkout,Team Alpha,Payment failure on expired card,Sev1,2026-07-01,2026-07-03,2026-07-04,Production,true,R12,R12,Closed
+D012,Acme,Payments,Checkout,Team Alpha,UI issue on review step,Sev3,2026-07-02,2026-07-05,2026-07-07,System Test,false,R12,R12,Closed
+D013,Acme,Payments,Checkout,Team Alpha,Missing validation on CVV,Sev2,2026-07-03,2026-07-04,2026-07-08,Development,false,R12,R12,Closed
+D014,Acme,Payments,Checkout,Team Alpha,Unit test gap for refunds,Sev4,2026-07-04,2026-07-04,2026-07-06,Unit Testing,false,R12,R12,Resolved
+D015,Acme,Payments,Checkout,Team Beta,Webhook retry storms,Sev2,2026-07-06,2026-07-07,2026-07-12,Integration Testing,false,R12,R12,Closed
+D016,Acme,Payments,Checkout,Team Beta,Tax line hidden on mobile,Sev3,2026-07-08,2026-07-09,2026-07-15,UAT,false,R12,R12,Closed
+D017,Acme,Travel,Booking,Team Gamma,Infant fare not applied,Sev2,2026-07-09,2026-07-10,2026-07-16,System Testing,false,R12,R12,Closed
+D018,Acme,Travel,Booking,Team Gamma,Baggage add-on price stale,Sev3,2026-07-11,2026-07-12,2026-07-18,Requirements,false,R12,R13,Closed
+D019,Acme,Payments,Checkout,Team Alpha,Apple Pay sheet cancelled twice,Sev3,2026-07-14,2026-07-15,2026-07-20,UAT,false,R12,R12,Closed
+D020,Acme,Payments,Checkout,Team Beta,Address autocomplete timeout,Sev4,2026-07-16,2026-07-16,2026-07-19,Development,false,R12,R12,Closed
+D021,Acme,Travel,Booking,Team Gamma,Hold expires without notice,Sev2,2026-07-18,2026-07-19,2026-07-25,System Testing,false,R12,R12,Closed
+D022,Acme,Payments,Checkout,Team Alpha,Partial refund rounding,Sev3,2026-07-20,2026-07-21,2026-07-27,Integration Testing,false,R12,R13,Closed
+D023,Acme,Payments,Checkout,Team Beta,Chargeback note missing,Sev4,2026-07-22,2026-07-23,2026-07-29,Unit Testing,false,R12,R12,Resolved
+D024,Acme,Travel,Booking,Team Gamma,Hotel nights off-by-one,Sev2,2026-07-24,2026-07-25,2026-08-02,UAT,false,R12,R12,Closed
+D025,Acme,Payments,Checkout,Team Alpha,Statement descriptor truncated,Sev3,2026-07-26,2026-07-27,2026-08-04,System Testing,false,R12,R12,Closed
+D026,Acme,Payments,Checkout,Team Beta,SCA challenge not localized,Sev3,2026-07-28,2026-07-29,2026-08-06,Development,false,R12,R12,Closed
+D027,Acme,Travel,Booking,Team Gamma,Loyalty points not posted,Sev2,2026-07-30,2026-08-01,2026-08-10,Integration Testing,false,R12,R13,Closed
+D028,Acme,Payments,Checkout,Team Alpha,Gift card balance stale,Sev3,2026-08-02,2026-08-03,,UAT,false,R12,R13,In Progress
+D029,Acme,Payments,Checkout,Team Beta,Installment plan copy error,Sev4,2026-08-04,2026-08-05,,Requirements,false,R12,R13,New
+D030,Acme,Travel,Booking,Team Gamma,Calendar disabled on iOS,Sev3,2026-08-06,2026-08-07,,System Testing,false,R12,R12,Open
+D031,Acme,Payments,Checkout,Team Alpha,Idempotency key collision,Sev1,2026-08-08,2026-08-09,,Integration Testing,false,R12,R13,In Progress
+D032,Acme,Payments,Checkout,Team Beta,Merchant logo 404,Sev4,2026-08-10,2026-08-10,,Development,false,R12,R12,New
+D033,Acme,Travel,Booking,Team Gamma,Ancillaries lost on back,Sev2,2026-08-12,2026-08-13,,UAT,true,R12,R13,Open
+D034,Acme,Payments,Checkout,Team Alpha,Risk score not persisted,Sev2,2026-08-14,2026-08-15,,System Testing,false,R12,R13,Open

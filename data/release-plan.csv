@@ -1,0 +1,7 @@
+organization,vertical,product,release,dev_start,dev_complete,test_start,test_complete,prod_deployment
+Acme,Payments,Checkout,R11,2026-05-06,2026-05-22,2026-05-20,2026-06-12,2026-06-18
+Acme,Travel,Booking,R11,2026-05-08,2026-05-26,2026-05-22,2026-06-10,2026-06-18
+Acme,Payments,Checkout,R12,2026-06-18,2026-07-22,2026-07-08,2026-08-10,2026-08-20
+Acme,Travel,Booking,R12,2026-06-20,2026-07-24,2026-07-10,2026-08-08,2026-08-20
+Acme,Payments,Checkout,R13,2026-07-29,2026-08-22,2026-08-18,,
+Acme,Travel,Booking,R13,2026-08-01,2026-08-25,2026-08-20,,

@@ -1,0 +1,3 @@
+# Optional duplicate. OpenVector prefers ./openvector.yaml in the project root.
+data:
+  path: ./data
