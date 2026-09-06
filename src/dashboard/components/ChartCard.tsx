@@ -33,7 +33,7 @@ export function ChartCard({ title, docId, compact, footnote, hint, trail, action
     <section
       ref={cardRef}
       data-doc={`chart:${docId ?? title}`}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -69,7 +69,17 @@ export function ChartCard({ title, docId, compact, footnote, hint, trail, action
           ) : null}
         </div>
       </div>
-      <div ref={chartRef} className={`mt-4 overflow-visible ${compact ? "h-72" : "h-96"}`}>
+      <div
+        ref={chartRef}
+        className="mt-4 overflow-visible"
+        style={{
+          height: `var(${compact ? "--chart-compact-height" : "--chart-height"}, ${compact ? "18rem" : "24rem"})`,
+          width: "var(--chart-width, 100%)",
+          maxWidth: "none",
+          marginLeft: "auto",
+          marginRight: "auto"
+        }}
+      >
         {children}
       </div>
       {footnote ? <p className="mt-3 text-sm text-slate-500">{footnote}</p> : null}

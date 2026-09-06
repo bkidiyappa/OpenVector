@@ -1,4 +1,5 @@
 import { useFilters } from "../FilterContext";
+import { IconAspectLock, IconZoomIn, IconZoomOut } from "../icons";
 
 function SelectField({
   label,
@@ -30,7 +31,19 @@ function SelectField({
   );
 }
 
-export function FilterBar() {
+export function FilterBar({
+  zoom,
+  aspectLock,
+  onZoomIn,
+  onZoomOut,
+  onToggleAspectLock
+}: {
+  zoom: number;
+  aspectLock: boolean;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onToggleAspectLock: () => void;
+}) {
   const { filter, options, setFilterValue } = useFilters();
   const active = [filter.organization, filter.vertical, filter.product, filter.team].filter(
     (value) => value && value !== "All"
@@ -73,6 +86,48 @@ export function FilterBar() {
           Reset
         </button>
       ) : null}
+      <div className="ml-auto flex items-center gap-1" title="Chart size">
+        <span className="mr-1 hidden text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:inline">
+          Charts
+        </span>
+        <button
+          type="button"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-ink-900 disabled:opacity-40"
+          aria-label="Smaller charts"
+          title="Smaller charts — see more in one view"
+          disabled={zoom <= 50}
+          onClick={onZoomOut}
+        >
+          <IconZoomOut className="h-4 w-4" />
+        </button>
+        <span className="w-10 text-center text-xs font-medium tabular-nums text-slate-600">{zoom}%</span>
+        <button
+          type="button"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-ink-900 disabled:opacity-40"
+          aria-label="Larger charts"
+          title="Larger charts"
+          disabled={zoom >= 160}
+          onClick={onZoomIn}
+        >
+          <IconZoomIn className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${
+            aspectLock ? "bg-teal-50 text-teal-800" : "text-slate-600 hover:bg-slate-100 hover:text-ink-900"
+          }`}
+          aria-label={aspectLock ? "Unlock aspect ratio" : "Lock aspect ratio"}
+          aria-pressed={aspectLock}
+          title={
+            aspectLock
+              ? "Aspect ratio locked — width and height scale together"
+              : "Lock aspect ratio — scale width with height"
+          }
+          onClick={onToggleAspectLock}
+        >
+          <IconAspectLock className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
