@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { downloadChartPng } from "../downloadChart";
 
 type TrailItem = {
   label: string;
@@ -7,6 +8,8 @@ type TrailItem = {
 
 type ChartCardProps = {
   title: string;
+  docId?: string;
+  compact?: boolean;
   footnote?: string;
   hint?: string;
   trail?: TrailItem[];
@@ -22,9 +25,11 @@ export function ChartLink({ children, onClick }: { children: ReactNode; onClick:
   );
 }
 
-export function ChartCard({ title, footnote, hint, trail, actions, children }: ChartCardProps) {
+export function ChartCard({ title, docId, compact, footnote, hint, trail, actions, children }: ChartCardProps) {
+  const chartRef = useRef<HTMLDivElement>(null);
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section data-doc={`chart:${docId ?? title}`} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-ink-900">{title}</h2>
@@ -32,6 +37,15 @@ export function ChartCard({ title, footnote, hint, trail, actions, children }: C
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
           {actions}
+          <ChartLink
+            onClick={() => {
+              if (chartRef.current) {
+                downloadChartPng(chartRef.current, title);
+              }
+            }}
+          >
+            Download PNG
+          </ChartLink>
           {trail && trail.length > 0 ? (
             <nav className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
               {trail.map((item, index) => (
@@ -50,7 +64,9 @@ export function ChartCard({ title, footnote, hint, trail, actions, children }: C
           ) : null}
         </div>
       </div>
-      <div className="mt-4 h-96 overflow-visible">{children}</div>
+      <div ref={chartRef} className={`mt-4 overflow-visible ${compact ? "h-72" : "h-96"}`}>
+        {children}
+      </div>
       {footnote ? <p className="mt-3 text-sm text-slate-500">{footnote}</p> : null}
     </section>
   );

@@ -26,7 +26,7 @@ npm run start
 node scripts/capture-docs-screenshots.mjs
 ```
 
-The capture script uses the installed Chrome browser. Keep the five files in `docs/images/` in sync with the live pages.
+The capture script uses the installed Chrome browser. It writes one PNG per metric card and chart into `docs/images/`. Keep those files in sync with the live pages.
 
 ## Future sources
 

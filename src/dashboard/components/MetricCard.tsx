@@ -12,6 +12,7 @@ type MetricCardProps = {
 export function MetricCard({ label, value, hint, trend, active }: MetricCardProps) {
   return (
     <article
+      data-doc={`metric:${label}`}
       className={`rounded-2xl border bg-white p-5 shadow-sm ${
         active ? "border-teal-600 ring-1 ring-teal-600" : "border-slate-200"
       }`}

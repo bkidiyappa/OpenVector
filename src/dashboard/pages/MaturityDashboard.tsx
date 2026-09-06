@@ -241,6 +241,7 @@ export function MaturityDashboard() {
         </div>
       </section>
       <ChartCard
+        docId="normalized-scores"
         title="Normalized Scores"
         hint="Click a bar to drill into teams or modules"
         trail={
@@ -318,6 +319,7 @@ export function MaturityDashboard() {
       </ChartCard>
 
       <ChartCard
+        docId="coverage-trend"
         title="Code Coverage Trend"
         hint={
           showCoverageBreakdown
@@ -422,6 +424,7 @@ export function MaturityDashboard() {
       ) : null}
 
       <ChartCard
+        docId="quality-trend"
         title="Code Quality Trend"
         hint={
           showQualityBreakdown

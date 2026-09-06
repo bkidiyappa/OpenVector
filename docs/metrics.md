@@ -2,7 +2,7 @@
 
 OpenVector turns CSV files into team-level engineering metrics. All formulas live in `src/metrics/`. Dashboard pages only render API results; they never recalculate business metrics.
 
-Use this page to learn **what each number is**, **where it appears**, and **how to infer** whether the signal is healthy, mixed, or a problem. Screenshots use the sample files in `/data` (Acme / Payments / Checkout and Acme / Travel / Booking).
+Use this page to learn **what each number is**, **where it appears**, and **how to infer** whether the signal is healthy, mixed, or a problem. Images are the individual cards and charts from the sample files in `/data` (Acme / Payments / Checkout and Acme / Travel / Booking).
 
 Decimals on the dashboard are rounded to two places. Whole numbers stay whole. Missing source data is shown as an em dash (`—`) and is omitted from weighted scores — OpenVector does not invent values.
 
@@ -20,7 +20,7 @@ Filters at the top (organization → vertical → product → team) apply to eve
 
 Desired direction: higher is better for velocity, SP / capacity day, and maturity. Lower is better for defect leakage.
 
-Charts show data labels on bars and lines by default. Use **Hide data labels** / **Show data labels** on a chart if the plot is crowded. Click a bar, point, or KPI to drill down. Click a breadcrumb to go back.
+Charts show data labels on bars and lines by default. Use **Hide data labels** / **Show data labels** on a chart if the plot is crowded. Use **Download PNG** to save the plot. Click a bar, point, or KPI to drill down. Click a breadcrumb to go back.
 
 ---
 
@@ -28,9 +28,9 @@ Charts show data labels on bars and lines by default. Use **Hide data labels** /
 
 The Overview page is the executive summary. Each card links to the page that owns the metric.
 
-![Overview dashboard](images/overview.png)
-
 ### Quality Maturity
+
+![Quality Maturity card](images/overview-quality-maturity.png)
 
 **What it is.** A 0–10 weighted score of automation coverage, code coverage, SonarQube code quality, and defect leakage. The band (World Class, Optimized, Managed, Developing, Initial, Critical) is the first matching minimum in `openvector.yaml`.
 
@@ -38,11 +38,15 @@ The Overview page is the executive summary. Each card links to the page that own
 
 ### Velocity
 
+![Velocity card](images/overview-velocity.png)
+
 **What it is.** Completed story points in the latest sprint (all teams in the current filter, summed).
 
 **How to infer it.** Look at the arrow first: improving means the latest sprint completed more points than the one before, beyond the 5% band. Then open Productivity and compare planned vs completed. Rising velocity with falling SP / capacity day usually means more people or more days, not more output per day.
 
 ### SP / Capacity Day
+
+![SP / Capacity Day card](images/overview-sp-capacity-day.png)
 
 **What it is.** Completed story points ÷ available person-days in the latest sprint. This is **not** story points per developer.
 
@@ -50,17 +54,23 @@ The Overview page is the executive summary. Each card links to the page that own
 
 ### Defect Leakage
 
+![Defect Leakage card](images/overview-defect-leakage.png)
+
 **What it is.** Production-phase defects ÷ defects in the current view × 100. Production is any `detection_phase` listed under `productionPhases` (default: Production). On Overview the view is every defect that matches the org filters (all releases).
 
 **How to infer it.** Lower is better. Near 0% means almost nothing in view reached production. A double-digit rate means a meaningful share escaped earlier phases. Click the card to open Quality filtered to production defects. Prefer the per-release DRE line on Quality for escape rate; the Overview number mixes every release in the filter. Compare leakage to DRE on the same set (`DRE + leakage ≈ 100%`).
 
 ### Open Defects
 
+![Open Defects card](images/overview-open-defects.png)
+
 **What it is.** Count of defects whose status is not in `closedStatuses` (default Closed, Resolved, Done).
 
 **How to infer it.** This is a stock, not a rate. A high count with a falling daily open-backlog line means the team is working the pile down. A low count that is still rising day over day is an inflow problem. Click through to the defect list and check age and severity before treating the number as a crisis.
 
 ### Customer Defects
+
+![Customer Defects card](images/overview-customer-defects.png)
 
 **What it is.** Count of defects with `customer_reported = true` (external). All others are internal.
 
@@ -70,9 +80,9 @@ The Overview page is the executive summary. Each card links to the page that own
 
 ## Productivity
 
-![Productivity dashboard](images/productivity.png)
-
 ### Available capacity (person-days)
+
+![Available Capacity card](images/productivity-available-capacity.png)
 
 ```text
 Gross capacity      = team size × working days
@@ -88,6 +98,8 @@ Example: 10 people, 10 working days, 1 holiday, 2 leave days → `100 − 10 −
 
 ### Velocity
 
+![Completed SP card](images/productivity-completed-sp.png)
+
 ```text
 Velocity = completed story points
 ```
@@ -95,6 +107,8 @@ Velocity = completed story points
 **How to infer it.** One sprint is noise. Use the moving-average line on the chart. A single sprint above plan with a flat average is a spike. Several sprints below plan with a falling average is a trend.
 
 ### Story points per capacity day
+
+![SP / Capacity Day card](images/productivity-sp-capacity-day.png)
 
 ```text
 SP / capacity day = completed story points ÷ available person-days
@@ -110,6 +124,8 @@ Trailing average of completed story points over `metrics.velocityMovingAverage` 
 
 ### Velocity · Planned vs Completed chart
 
+![Velocity planned vs completed](images/productivity-velocity-chart.png)
+
 Gray bars are planned points, teal bars are completed, the dashed line is the moving average, and the red line (right axis) is SP / capacity day.
 
 **How to infer it.**
@@ -123,11 +139,11 @@ Gray bars are planned points, teal bars are completed, the dashed line is the mo
 
 ## Quality
 
-![Quality dashboard](images/quality.png)
-
 No release is selected by default, so charts use the full defect set. Click a release on the phase/DRE chart to filter. Click **All releases** to clear.
 
 ### Defect leakage
+
+![Defect Leakage card](images/quality-defect-leakage.png)
 
 ```text
 Defect leakage = production-phase defects ÷ defects in the current view × 100
@@ -153,17 +169,21 @@ This is the complement of leakage for that release. Phases are Development, Syst
 
 ### Defects by Phase and DRE by Release
 
+![Defects by Phase and DRE](images/quality-phase-dre.png)
+
 Grouped bars are defects found in each `found_in_release`, by detection phase. The line is DRE for that release.
 
 **How to infer it.** Scan left to right. A release that grows Production (red) while DRE falls is a regression in removal efficiency. Click a phase bar to list those defects. Click the release to filter the rest of the page.
 
 ### Open / Closure Daily Trend
 
+![Open / Closure Daily Trend](images/quality-daily-trend.png)
+
 Created counts sit above the zero line, closed counts below it, and the red line is remaining open defects. Dates use `created_date` and `resolved_date`.
 
 When a release is selected, `release-plan.csv` milestones (Dev Start, Dev Complete, Test Start, Test Complete, Prod Deployment) appear as vertical markers. Use **Hide milestones** / **Show milestones** if the labels overlap. The series is extended so milestone dates land on the axis.
 
-![Open / closure trend with release milestones](images/quality-release.png)
+![Open / Closure Daily Trend for R12 with milestones](images/quality-daily-trend-r12.png)
 
 **How to infer it.**
 
@@ -173,19 +193,23 @@ When a release is selected, `release-plan.csv` milestones (Dev Start, Dev Comple
 - Created bars during Dev Start–Dev Complete that are Production phase are a data-quality smell (phase and dates disagree).
 - If Checkout and Booking use different dates for the same milestone, both lines are shown and labeled.
 
-### Defects by Status
+### Defects by Status and Severity
 
-Raw `status` values as stored in the CSV (New, Open, In Progress, Closed, and so on).
+<img src="images/quality-status.png" alt="Defects by Status" width="48%" /> <img src="images/quality-severity.png" alt="Defects by Severity" width="48%" />
+
+**Status.** Raw `status` values as stored in the CSV (New, Open, In Progress, Closed, and so on).
 
 **How to infer it.** A large “In Progress” pile with few Closed in the daily trend means work is stuck, not that inflow is high. Click a status to list those rows.
 
-### Defects by Severity
-
-CSV severities are mapped through `severity` in `openvector.yaml` (for example Sev1 → Critical, Sev2 → High). Unmapped values appear as Unmapped.
+**Severity.** CSV severities are mapped through `severity` in `openvector.yaml` (for example Sev1 → Critical, Sev2 → High). Unmapped values appear as Unmapped.
 
 **How to infer it.** Weight Critical/High over Medium/Low. Nine Medium defects are not worse than two Critical ones. Click a bar, then check whether those defects are customer-reported or production.
 
-### Defects by Age
+### Defects by Age and Internally Found vs Customer Found
+
+<img src="images/quality-age.png" alt="Defects by Age" width="48%" /> <img src="images/quality-origin.png" alt="Defects by Internally Found vs Customer Found" width="48%" />
+
+**Age.**
 
 - Open: today − `created_date`
 - Closed: `resolved_date` − `created_date`
@@ -194,17 +218,15 @@ Buckets: 0–7, 8–14, 15–30, 31–60, 61–90, >90 days.
 
 **How to infer it.** Age of **open** defects is the one that matters for risk. A tall >90 bar of still-open High/Critical items is a backlog that will not age out on its own. Closed defects in >90 tell you historical cycle time, not current danger.
 
-### Internal vs external
+**Internally Found vs Customer Found.** `customer_reported = true` is Customer Found. Otherwise Internally Found. The Customer Defects KPI is the customer-found count.
 
-`customer_reported = true` is external. Otherwise internal. The Customer Defects KPI is the external count.
-
-**How to infer it.** Internal-heavy and early-phase is a working quality process. External-heavy, especially in Production, is escaped customer pain.
+**How to infer it.** Internal-heavy and early-phase is a working quality process. Customer-heavy, especially in Production, is escaped customer pain. Click a bar to list those defects.
 
 ---
 
 ## Maturity
 
-![Maturity dashboard](images/maturity.png)
+![Quality Maturity card](images/maturity-quality-maturity.png)
 
 Each component has a raw value, a 0–10 score, and a weight. Overall maturity is the weighted average of components that have data.
 
@@ -214,6 +236,8 @@ Each component has a raw value, a 0–10 score, and a weight. Overall maturity i
 | Code coverage | Covered ÷ coverable × 100, latest row per module, then summed | percent / 10 |
 | Code quality | Weighted SonarQube score (0–10) | same value |
 | Defect leakage | Same percent as Overview / Quality with no release selected | `10 × (1 − leakage / leakageZeroScoreAt)` |
+
+![Defect Leakage maturity card](images/maturity-defect-leakage.png)
 
 Default `leakageZeroScoreAt` is 21: 0% leakage scores 10, 21% scores 0. Default component weights are 25% each.
 
@@ -239,11 +263,17 @@ Bands (first matching minimum):
 
 ### Automation coverage
 
+![Automation Coverage card](images/maturity-automation-coverage.png)
+
 Latest `automation_coverage` per team, then averaged. Score = percent / 10.
 
 **How to infer it.** This is test automation share, not code coverage. A high automation score with low code coverage means many automated tests on a thin slice of the code. The reverse means unit coverage without broader automation.
 
 ### Code coverage
+
+![Code Coverage card](images/maturity-code-coverage.png)
+
+![Code Coverage Trend](images/maturity-coverage-trend.png)
 
 ```text
 Coverage = covered lines ÷ coverable lines × 100
@@ -260,6 +290,10 @@ The Code Coverage Trend chart plots that percent over time. Click a date to see 
 - Drill to modules: one poorly covered payments-core can hide inside a healthy product average if you only look at the percent.
 
 ### Code quality (SonarQube)
+
+![Code Quality card](images/maturity-code-quality.png)
+
+![Code Quality Trend](images/maturity-quality-trend.png)
 
 ```text
 Score = (maintainability × w_m + security × w_s + vulnerability × w_v)
@@ -279,6 +313,8 @@ The Code Quality Trend chart shows the three ratings plus the weighted score. Cl
 - Compare modules on a date: a single module below 7 is the place to act, not a 0.2 movement in the org average.
 
 ### Normalized Scores chart
+
+![Normalized Scores](images/maturity-normalized-scores.png)
 
 Bars are the 0–10 scores used in the overall average. Click a bar for the latest team or module breakdown.
 

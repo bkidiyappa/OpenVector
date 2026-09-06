@@ -16,7 +16,7 @@ Thank you for helping improve OpenVector.
 2. Add or update unit tests for metric changes.
 3. Run `npm test`.
 4. If you change CSV columns, update `src/data/schemas.ts` and `docs/data-format.md`.
-5. If you change a metric or dashboard chart, update `docs/metrics.md` and regenerate `docs/images/` (see [docs/contributing.md](docs/contributing.md)).
+5. If you change a metric or dashboard chart, update `docs/metrics.md` and regenerate the individual PNGs in `docs/images/` (see [docs/contributing.md](docs/contributing.md)).
 6. Open a pull request with the why, not only the what.
 
 ## Local commands

@@ -71,6 +71,16 @@ const SEVERITY_COLORS: Record<string, string> = {
   unmapped: "#94a3b8"
 };
 
+const ORIGIN_COLORS: Record<string, string> = {
+  internal: "#0f766e",
+  external: "#be123c"
+};
+
+const ORIGIN_LABELS: Record<"internal" | "external", string> = {
+  internal: "Internally Found",
+  external: "Customer Found"
+};
+
 function toggleField<K extends keyof DefectDrillFilter>(
   current: DefectDrillFilter,
   key: K,
@@ -90,7 +100,7 @@ function drillLabel(drill: DefectDrillFilter): string {
     drill.release,
     drill.severity,
     drill.phase,
-    drill.origin,
+    drill.origin === "external" ? "Customer Found" : drill.origin === "internal" ? "Internally Found" : drill.origin,
     drill.ageBucket,
     drill.status,
     drill.statusName,
@@ -114,7 +124,8 @@ export function QualityDashboard() {
     daily: true,
     status: true,
     severity: true,
-    age: true
+    age: true,
+    origin: true
   });
   const filterKey = `${filter.organization}|${filter.vertical}|${filter.product}|${filter.team}`;
 
@@ -285,6 +296,7 @@ export function QualityDashboard() {
       </section>
 
       <ChartCard
+        docId="phase-dre"
         title="Defects by Phase and DRE by Release"
         hint="Bars are defects found in each release, by phase. The line is defect removal efficiency. Click a release to filter; click a phase bar to list those defects."
         trail={releaseTrail}
@@ -344,16 +356,12 @@ export function QualityDashboard() {
       </ChartCard>
 
       <ChartCard
+        docId="daily-trend"
         title={`Open / Closure Daily Trend${selectedRelease ? ` · ${selectedRelease}` : " · All releases"}`}
         hint={
           selectedRelease
             ? "Created above the datum, closed below it. Vertical lines are release-plan milestones."
             : "Created above the datum, closed below it. The line is open defects. Click a release to show milestone markers."
-        }
-        footnote={
-          showMilestones && selectedRelease && data.releaseMilestones.length > 0
-            ? data.releaseMilestones.map((milestone) => `${milestone.label} ${milestone.date}`).join(" · ")
-            : undefined
         }
         trail={releaseTrail}
         actions={
@@ -430,131 +438,185 @@ export function QualityDashboard() {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard
-        title="Defects by Status"
-        hint="Click a status to list those defects"
-        trail={trail}
-        actions={labelLink("status")}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data.byStatus}
-            margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
-            className="cursor-pointer"
-            onClick={(state) => {
-              const status = (state?.activePayload?.[0]?.payload as { status?: string } | undefined)?.status;
-              if (status) {
-                setDrill(toggleField(drill, "statusName", status));
-              }
-            }}
-          >
-            <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-            <XAxis dataKey="status" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar
-              isAnimationActive={false}
-              dataKey="count"
-              name="Defects"
-              fill="#334155"
-              radius={[4, 4, 0, 0]}
-              label={chartLabel(showLabels.status, { hideZero: true })}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard
+          compact
+          docId="status"
+          title="Defects by Status"
+          hint="Click a status to list those defects"
+          trail={trail}
+          actions={labelLink("status")}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data.byStatus}
+              margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
+              className="cursor-pointer"
+              onClick={(state) => {
+                const status = (state?.activePayload?.[0]?.payload as { status?: string } | undefined)?.status;
+                if (status) {
+                  setDrill(toggleField(drill, "statusName", status));
+                }
+              }}
             >
-              {data.byStatus.map((entry) => (
-                <Cell
-                  key={entry.status}
-                  fill="#334155"
-                  opacity={!drill.statusName || drill.statusName === entry.status ? 1 : 0.35}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+              <XAxis dataKey="status" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar
+                isAnimationActive={false}
+                dataKey="count"
+                name="Defects"
+                fill="#334155"
+                radius={[4, 4, 0, 0]}
+                label={chartLabel(showLabels.status, { hideZero: true })}
+              >
+                {data.byStatus.map((entry) => (
+                  <Cell
+                    key={entry.status}
+                    fill="#334155"
+                    opacity={!drill.statusName || drill.statusName === entry.status ? 1 : 0.35}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-      <ChartCard
-        title="Defects by Severity"
-        hint="Click a bar to list those defects"
-        trail={trail}
-        actions={labelLink("severity")}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data.bySeverity}
-            margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
-            className="cursor-pointer"
-            onClick={(state) => {
-              const key = (state?.activePayload?.[0]?.payload as { key?: string } | undefined)?.key;
-              if (key) {
-                setDrill(toggleField(drill, "severity", key));
-              }
-            }}
-          >
-            <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-            <XAxis dataKey="label" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar
-              isAnimationActive={false}
-              dataKey="count"
-              name="Defects"
-              radius={[4, 4, 0, 0]}
-              label={chartLabel(showLabels.severity, { hideZero: true })}
+        <ChartCard
+          compact
+          docId="severity"
+          title="Defects by Severity"
+          hint="Click a bar to list those defects"
+          trail={trail}
+          actions={labelLink("severity")}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data.bySeverity}
+              margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
+              className="cursor-pointer"
+              onClick={(state) => {
+                const key = (state?.activePayload?.[0]?.payload as { key?: string } | undefined)?.key;
+                if (key) {
+                  setDrill(toggleField(drill, "severity", key));
+                }
+              }}
             >
-              {data.bySeverity.map((entry) => (
-                <Cell
-                  key={entry.key}
-                  fill={SEVERITY_COLORS[entry.key] ?? "#64748b"}
-                  opacity={!drill.severity || drill.severity === entry.key ? 1 : 0.35}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+              <XAxis dataKey="label" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar
+                isAnimationActive={false}
+                dataKey="count"
+                name="Defects"
+                radius={[4, 4, 0, 0]}
+                label={chartLabel(showLabels.severity, { hideZero: true })}
+              >
+                {data.bySeverity.map((entry) => (
+                  <Cell
+                    key={entry.key}
+                    fill={SEVERITY_COLORS[entry.key] ?? "#64748b"}
+                    opacity={!drill.severity || drill.severity === entry.key ? 1 : 0.35}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-      <ChartCard
-        title="Defects by Age"
-        hint="Click a bucket to list those defects"
-        footnote="Open defects use today − created date. Closed defects use resolved − created."
-        trail={trail}
-        actions={labelLink("age")}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data.byAge}
-            margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
-            className="cursor-pointer"
-            onClick={(state) => {
-              const bucket = (state?.activePayload?.[0]?.payload as { bucket?: string } | undefined)?.bucket;
-              if (bucket) {
-                setDrill(toggleField(drill, "ageBucket", bucket));
-              }
-            }}
-          >
-            <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-            <XAxis dataKey="bucket" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar
-              isAnimationActive={false}
-              dataKey="count"
-              name="Defects"
-              fill="#155e75"
-              radius={[4, 4, 0, 0]}
-              label={chartLabel(showLabels.age, { hideZero: true })}
+        <ChartCard
+          compact
+          docId="age"
+          title="Defects by Age"
+          hint="Click a bucket to list those defects"
+          footnote="Open defects use today − created date. Closed defects use resolved − created."
+          trail={trail}
+          actions={labelLink("age")}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data.byAge}
+              margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
+              className="cursor-pointer"
+              onClick={(state) => {
+                const bucket = (state?.activePayload?.[0]?.payload as { bucket?: string } | undefined)?.bucket;
+                if (bucket) {
+                  setDrill(toggleField(drill, "ageBucket", bucket));
+                }
+              }}
             >
-              {data.byAge.map((entry) => (
-                <Cell
-                  key={entry.bucket}
-                  fill="#155e75"
-                  opacity={!drill.ageBucket || drill.ageBucket === entry.bucket ? 1 : 0.35}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+              <XAxis dataKey="bucket" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar
+                isAnimationActive={false}
+                dataKey="count"
+                name="Defects"
+                fill="#155e75"
+                radius={[4, 4, 0, 0]}
+                label={chartLabel(showLabels.age, { hideZero: true })}
+              >
+                {data.byAge.map((entry) => (
+                  <Cell
+                    key={entry.bucket}
+                    fill="#155e75"
+                    opacity={!drill.ageBucket || drill.ageBucket === entry.bucket ? 1 : 0.35}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard
+          compact
+          docId="origin"
+          title="Defects by Internally Found vs Customer Found"
+          hint="Click a bar to list those defects"
+          trail={trail}
+          actions={labelLink("origin")}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data.internalVsExternal.map((row) => ({
+                ...row,
+                label: ORIGIN_LABELS[row.key]
+              }))}
+              margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
+              className="cursor-pointer"
+              onClick={(state) => {
+                const key = (state?.activePayload?.[0]?.payload as { key?: "internal" | "external" } | undefined)?.key;
+                if (key) {
+                  setDrill(toggleField(drill, "origin", key));
+                }
+              }}
+            >
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+              <XAxis dataKey="label" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar
+                isAnimationActive={false}
+                dataKey="count"
+                name="Defects"
+                radius={[4, 4, 0, 0]}
+                label={chartLabel(showLabels.origin, { hideZero: true })}
+              >
+                {data.internalVsExternal.map((entry) => (
+                  <Cell
+                    key={entry.key}
+                    fill={ORIGIN_COLORS[entry.key] ?? "#64748b"}
+                    opacity={!drill.origin || drill.origin === entry.key ? 1 : 0.35}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
 
       {hasDrill ? (
         <DataTable<DefectListItem>

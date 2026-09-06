@@ -121,6 +121,7 @@ export function ProductivityDashboard() {
         />
       </section>
       <ChartCard
+        docId="velocity"
         title={selected ? `Velocity · Planned vs Completed · ${selected.sprint}` : "Velocity · Planned vs Completed"}
         hint={
           selected
