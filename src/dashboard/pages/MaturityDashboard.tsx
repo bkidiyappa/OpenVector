@@ -28,7 +28,7 @@ import { DataTable } from "../components/DataTable";
 import { MetricCard } from "../components/MetricCard";
 import { NotesList } from "../components/NotesList";
 import { useFilters } from "../FilterContext";
-import { formatNumber, formatPercent } from "../format";
+import { chartTooltipFormatter, formatNumber, formatPercent } from "../format";
 
 type TrendDrill = {
   date?: string;
@@ -275,7 +275,7 @@ export function MaturityDashboard() {
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="team" />
               <YAxis />
-              <Tooltip />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="value"
@@ -300,7 +300,7 @@ export function MaturityDashboard() {
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis domain={[0, 10]} />
-              <Tooltip />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="score"
@@ -350,15 +350,7 @@ export function MaturityDashboard() {
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="label" />
               <YAxis domain={[0, 100]} unit="%" />
-              <Tooltip
-                formatter={(value, name) => {
-                  const numeric = typeof value === "number" ? value : 0;
-                  if (name === "Coverage") {
-                    return [formatPercent(numeric), name];
-                  }
-                  return [numeric, String(name)];
-                }}
-              />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="coverage"
@@ -383,15 +375,7 @@ export function MaturityDashboard() {
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis domain={[0, 100]} unit="%" />
-              <Tooltip
-                formatter={(value, name) => {
-                  const numeric = typeof value === "number" ? value : 0;
-                  if (name === "Coverage") {
-                    return [formatPercent(numeric), name];
-                  }
-                  return [numeric, String(name)];
-                }}
-              />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Legend />
               <Line
                 isAnimationActive={false}
@@ -453,7 +437,7 @@ export function MaturityDashboard() {
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="label" />
               <YAxis domain={[0, 10]} />
-              <Tooltip formatter={(value) => (typeof value === "number" ? formatNumber(value) : value)} />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Legend />
               <Bar
                 isAnimationActive={false}
@@ -505,7 +489,7 @@ export function MaturityDashboard() {
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis domain={[0, 10]} />
-              <Tooltip formatter={(value) => (typeof value === "number" ? formatNumber(value) : value)} />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Legend />
               <Line
                 isAnimationActive={false}

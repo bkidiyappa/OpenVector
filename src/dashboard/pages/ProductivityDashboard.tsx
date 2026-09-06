@@ -18,7 +18,7 @@ import { DataTable } from "../components/DataTable";
 import { MetricCard } from "../components/MetricCard";
 import { NotesList } from "../components/NotesList";
 import { useFilters } from "../FilterContext";
-import { formatNumber } from "../format";
+import { chartTooltipFormatter, formatNumber } from "../format";
 
 type SelectedSprint = {
   sprint: string;
@@ -164,15 +164,7 @@ export function ProductivityDashboard() {
               <XAxis dataKey="team" />
               <YAxis yAxisId="points" />
               <YAxis yAxisId="perDay" orientation="right" />
-              <Tooltip
-                formatter={(value, name) => {
-                  const numeric = typeof value === "number" ? value : 0;
-                  if (name === "SP / Capacity Day") {
-                    return [formatNumber(numeric), name];
-                  }
-                  return [numeric, String(name)];
-                }}
-              />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Legend />
               <Bar
                 isAnimationActive={false}
@@ -215,15 +207,7 @@ export function ProductivityDashboard() {
               <XAxis dataKey="sprint" />
               <YAxis yAxisId="points" />
               <YAxis yAxisId="perDay" orientation="right" />
-              <Tooltip
-                formatter={(value, name) => {
-                  const numeric = typeof value === "number" ? value : 0;
-                  if (name === "SP / Capacity Day") {
-                    return [formatNumber(numeric), name];
-                  }
-                  return [numeric, String(name)];
-                }}
-              />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Legend />
               <Bar
                 isAnimationActive={false}

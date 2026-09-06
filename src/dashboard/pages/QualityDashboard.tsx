@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Bar,
@@ -22,7 +22,8 @@ import { DataTable } from "../components/DataTable";
 import { MetricCard } from "../components/MetricCard";
 import { NotesList } from "../components/NotesList";
 import { useFilters } from "../FilterContext";
-import { formatPercent } from "../format";
+import { setChartDrill, releaseDrill } from "../defectDrill";
+import { chartTooltipFormatter, formatPercent } from "../format";
 import { MILESTONE_COLORS } from "../../metrics/release-plan";
 
 type MilestoneLabelProps = {
@@ -81,20 +82,6 @@ const ORIGIN_LABELS: Record<"internal" | "external", string> = {
   external: "Customer Found"
 };
 
-function toggleField<K extends keyof DefectDrillFilter>(
-  current: DefectDrillFilter,
-  key: K,
-  value: DefectDrillFilter[K]
-): DefectDrillFilter {
-  const next = { ...current };
-  if (next[key] === value) {
-    delete next[key];
-  } else {
-    next[key] = value;
-  }
-  return next;
-}
-
 function drillLabel(drill: DefectDrillFilter): string {
   const parts = [
     drill.release,
@@ -118,6 +105,7 @@ export function QualityDashboard() {
   const [selectedRelease, setSelectedRelease] = useState<string | null>(null);
   const [defects, setDefects] = useState<DefectListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const phaseBarClick = useRef(false);
   const [showMilestones, setShowMilestones] = useState(true);
   const [showLabels, setShowLabels] = useState({
     phase: true,
@@ -203,7 +191,10 @@ export function QualityDashboard() {
 
   const trail = hasDrill
     ? [
-        { label: "All defects", onClick: () => setDrill({}) },
+        {
+          label: "All defects",
+          onClick: () => setDrill(selectedRelease ? { release: selectedRelease } : {})
+        },
         { label: drillLabel(drill) }
       ]
     : undefined;
@@ -222,11 +213,7 @@ export function QualityDashboard() {
       return;
     }
     setSelectedRelease(release);
-    setDrill((current) => ({
-      ...current,
-      release,
-      ...(phase ? { phase } : {})
-    }));
+    setDrill(releaseDrill(release, phase));
   };
 
   const dailyTrend = data.dailyTrend.map((point, index, all) => ({
@@ -268,7 +255,7 @@ export function QualityDashboard() {
       </div>
       <NotesList notes={data.notes} />
       <section className="grid gap-4 md:grid-cols-3">
-        <button type="button" className="text-left" onClick={() => setDrill({ productionOnly: true })}>
+        <button type="button" className="text-left" onClick={() => setDrill(setChartDrill(drill, "productionOnly", true))}>
           <MetricCard
             label="Defect Leakage"
             value={formatPercent(data.defectLeakage)}
@@ -277,7 +264,7 @@ export function QualityDashboard() {
             active={Boolean(drill.productionOnly)}
           />
         </button>
-        <button type="button" className="text-left" onClick={() => setDrill(toggleField(drill, "status", "open"))}>
+        <button type="button" className="text-left" onClick={() => setDrill(setChartDrill(drill, "status", "open"))}>
           <MetricCard
             label="Open Defects"
             value={String(data.openDefects)}
@@ -285,7 +272,7 @@ export function QualityDashboard() {
             active={drill.status === "open"}
           />
         </button>
-        <button type="button" className="text-left" onClick={() => setDrill({ origin: "external" })}>
+        <button type="button" className="text-left" onClick={() => setDrill(setChartDrill(drill, "origin", "external"))}>
           <MetricCard
             label="Customer Defects"
             value={String(data.customerDefects)}
@@ -308,25 +295,19 @@ export function QualityDashboard() {
             margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
             className="cursor-pointer"
             onClick={(state) => {
+              if (phaseBarClick.current) {
+                phaseBarClick.current = false;
+                return;
+              }
               const payload = state?.activePayload?.[0]?.payload as { release?: string } | undefined;
-              const dataKey = state?.activePayload?.[0]?.dataKey;
-              const phase = typeof dataKey === "string" && data.detectionPhases.includes(dataKey) ? dataKey : undefined;
-              selectRelease(payload?.release, phase);
+              selectRelease(payload?.release);
             }}
           >
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
             <XAxis dataKey="release" />
             <YAxis yAxisId="count" allowDecimals={false} />
             <YAxis yAxisId="dre" orientation="right" domain={[0, 100]} unit="%" />
-            <Tooltip
-              formatter={(value, name) => {
-                const numeric = typeof value === "number" ? value : 0;
-                if (name === "DRE") {
-                  return [formatPercent(numeric), "DRE"];
-                }
-                return [numeric, String(name)];
-              }}
-            />
+            <Tooltip formatter={chartTooltipFormatter} />
             <Legend />
             {data.detectionPhases.map((phase) => (
               <Bar
@@ -338,6 +319,11 @@ export function QualityDashboard() {
                 fill={PHASE_BAR_COLORS[phase] ?? "#64748b"}
                 radius={[3, 3, 0, 0]}
                 label={chartLabel(showLabels.phase, { hideZero: true })}
+                onClick={(entry) => {
+                  phaseBarClick.current = true;
+                  const row = entry as { release?: string; payload?: { release?: string } };
+                  selectRelease(row.release ?? row.payload?.release, phase);
+                }}
               />
             ))}
             <Line
@@ -398,15 +384,7 @@ export function QualityDashboard() {
                   />
                 ))
               : null}
-            <Tooltip
-              formatter={(value, name) => {
-                const numeric = typeof value === "number" ? value : 0;
-                if (name === "Closed") {
-                  return [Math.abs(numeric), "Closed"];
-                }
-                return [numeric, String(name)];
-              }}
-            />
+            <Tooltip formatter={chartTooltipFormatter} />
             <Legend />
             <Bar
               isAnimationActive={false}
@@ -455,14 +433,14 @@ export function QualityDashboard() {
               onClick={(state) => {
                 const status = (state?.activePayload?.[0]?.payload as { status?: string } | undefined)?.status;
                 if (status) {
-                  setDrill(toggleField(drill, "statusName", status));
+                  setDrill(setChartDrill(drill, "statusName", status));
                 }
               }}
             >
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="status" />
               <YAxis allowDecimals={false} />
-              <Tooltip />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="count"
@@ -499,14 +477,14 @@ export function QualityDashboard() {
               onClick={(state) => {
                 const key = (state?.activePayload?.[0]?.payload as { key?: string } | undefined)?.key;
                 if (key) {
-                  setDrill(toggleField(drill, "severity", key));
+                  setDrill(setChartDrill(drill, "severity", key));
                 }
               }}
             >
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="label" />
               <YAxis allowDecimals={false} />
-              <Tooltip />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="count"
@@ -543,14 +521,14 @@ export function QualityDashboard() {
               onClick={(state) => {
                 const bucket = (state?.activePayload?.[0]?.payload as { bucket?: string } | undefined)?.bucket;
                 if (bucket) {
-                  setDrill(toggleField(drill, "ageBucket", bucket));
+                  setDrill(setChartDrill(drill, "ageBucket", bucket));
                 }
               }}
             >
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="bucket" />
               <YAxis allowDecimals={false} />
-              <Tooltip />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="count"
@@ -590,14 +568,14 @@ export function QualityDashboard() {
               onClick={(state) => {
                 const key = (state?.activePayload?.[0]?.payload as { key?: "internal" | "external" } | undefined)?.key;
                 if (key) {
-                  setDrill(toggleField(drill, "origin", key));
+                  setDrill(setChartDrill(drill, "origin", key));
                 }
               }}
             >
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="label" interval={0} tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} />
-              <Tooltip />
+              <Tooltip formatter={chartTooltipFormatter} />
               <Bar
                 isAnimationActive={false}
                 dataKey="count"

@@ -26,10 +26,15 @@ export function ChartLink({ children, onClick }: { children: ReactNode; onClick:
 }
 
 export function ChartCard({ title, docId, compact, footnote, hint, trail, actions, children }: ChartCardProps) {
+  const cardRef = useRef<HTMLElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section data-doc={`chart:${docId ?? title}`} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section
+      ref={cardRef}
+      data-doc={`chart:${docId ?? title}`}
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-ink-900">{title}</h2>
@@ -39,8 +44,8 @@ export function ChartCard({ title, docId, compact, footnote, hint, trail, action
           {actions}
           <ChartLink
             onClick={() => {
-              if (chartRef.current) {
-                downloadChartPng(chartRef.current, title);
+              if (cardRef.current) {
+                downloadChartPng(cardRef.current, title);
               }
             }}
           >

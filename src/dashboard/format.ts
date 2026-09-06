@@ -19,3 +19,16 @@ export function formatPercent(value: number | null | undefined): string {
   }
   return formatDecimal(value, "%");
 }
+
+export function chartTooltipFormatter(value: unknown, name: unknown): [string, string] {
+  const label = name == null ? "" : String(name);
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numeric)) {
+    return [String(value ?? ""), label];
+  }
+  const magnitude = label === "Closed" ? Math.abs(numeric) : numeric;
+  if (label === "DRE" || label === "Coverage") {
+    return [formatPercent(magnitude), label];
+  }
+  return [formatNumber(magnitude), label];
+}
