@@ -1,5 +1,6 @@
 import type { AppConfig, DefectDrillFilter, DefectListItem, LoadedData, OrgFilter, QualityMetrics } from "../types.js";
 import { filterData } from "../data/data-service.js";
+import { calculateCopqMetrics, costForDefect } from "../metrics/copq.js";
 import {
   calculateDailyOpenClose,
   calculateDreByRelease,
@@ -46,6 +47,21 @@ export function qualityResponse(
   metrics.releaseMilestones = releaseMilestones;
   metrics.latestRelease = latestRelease(allDefects);
   metrics.selectedRelease = foundInRelease ?? null;
+  metrics.copq = calculateCopqMetrics(viewDefects, scoped.copqRates, config, today);
+  const copqAll =
+    foundInRelease && scoped.copqRates.length > 0
+      ? calculateCopqMetrics(allDefects, scoped.copqRates, config, today)
+      : metrics.copq;
+  if (metrics.copq && copqAll) {
+    metrics.copq = {
+      ...metrics.copq,
+      byRelease: copqAll.byRelease,
+      byProduct: copqAll.byProduct
+    };
+  }
+  if (metrics.copq?.notes.length) {
+    metrics.notes.push(...metrics.copq.notes);
+  }
   if (foundInRelease) {
     metrics.notes.unshift(`Release filter: found_in_release = ${foundInRelease}.`);
     if (releaseMilestones.length === 0) {
@@ -62,5 +78,18 @@ export function qualityDefectsResponse(
   drill: DefectDrillFilter
 ): DefectListItem[] {
   const scoped = filterData(data, filter);
-  return filterDefectsForDrill(scoped.defects, config, drill);
+  const mapped: DefectDrillFilter = {
+    ...drill,
+    release: drill.copqRelease ?? drill.release,
+    product: drill.copqProduct ?? drill.product,
+    team: drill.copqTeam ?? drill.team
+  };
+  const items = filterDefectsForDrill(scoped.defects, config, mapped).map((item) => {
+    const estimatedCost = costForDefect(item, scoped.copqRates, config);
+    return { ...item, estimatedCost };
+  });
+  if (drill.copq) {
+    return items.filter((item) => item.estimatedCost !== null);
+  }
+  return items;
 }

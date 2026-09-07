@@ -4,6 +4,7 @@ import {
   AUTOMATION_COLUMNS,
   CODE_COVERAGE_COLUMNS,
   CODE_QUALITY_COLUMNS,
+  COPQ_RATE_COLUMNS,
   DEFECT_COLUMNS,
   RELEASE_PLAN_COLUMNS,
   SPRINT_COLUMNS,
@@ -11,6 +12,7 @@ import {
   automationRowSchema,
   codeCoverageRowSchema,
   codeQualityRowSchema,
+  copqRateRowSchema,
   defectRowSchema,
   releasePlanRowSchema,
   sprintRowSchema,
@@ -54,6 +56,13 @@ export function loadAllData(config: AppConfig, cwd = process.cwd()): LoadedData 
     releasePlanRowSchema,
     true
   );
+  const copqRates = loadCsvFile(
+    csvPath(dataDir, "copq-rates.csv"),
+    "copq-rates.csv",
+    COPQ_RATE_COLUMNS,
+    copqRateRowSchema,
+    true
+  );
 
   messages.push(
     ...teams.messages,
@@ -62,7 +71,8 @@ export function loadAllData(config: AppConfig, cwd = process.cwd()): LoadedData 
     ...automation.messages,
     ...codeCoverage.messages,
     ...codeQuality.messages,
-    ...releasePlans.messages
+    ...releasePlans.messages,
+    ...copqRates.messages
   );
 
   const loaded: LoadedData = {
@@ -76,6 +86,10 @@ export function loadAllData(config: AppConfig, cwd = process.cwd()): LoadedData 
     codeCoverage: codeCoverage.rows,
     codeQuality: codeQuality.rows,
     releasePlans: releasePlans.rows,
+    copqRates: copqRates.rows.map((row) => ({
+      ...row,
+      detection_phase: config.phaseAliases[row.detection_phase] ?? row.detection_phase
+    })),
     messages
   };
 
@@ -90,7 +104,8 @@ export function filterData(data: LoadedData, filter: OrgFilter): Omit<LoadedData
     automation: applyFilter(data.automation, filter),
     codeCoverage: applyFilter(data.codeCoverage, filter),
     codeQuality: applyFilter(data.codeQuality, filter),
-    releasePlans: applyFilter(data.releasePlans, filter)
+    releasePlans: applyFilter(data.releasePlans, filter),
+    copqRates: data.copqRates
   };
 }
 

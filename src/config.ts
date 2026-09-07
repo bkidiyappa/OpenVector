@@ -59,6 +59,9 @@ const DEFAULT_CONFIG: AppConfig = {
       security: 0.3,
       vulnerability: 0.3
     }
+  },
+  copq: {
+    currency: "USD"
   }
 };
 
@@ -92,6 +95,7 @@ function mergeConfig(raw: unknown): AppConfig {
   const weights = isRecord(maturity.weights) ? maturity.weights : {};
   const codeQuality = isRecord(raw.codeQuality) ? raw.codeQuality : {};
   const codeQualityWeights = isRecord(codeQuality.weights) ? codeQuality.weights : {};
+  const copq = isRecord(raw.copq) ? raw.copq : {};
   const phaseAliases = isRecord(raw.phaseAliases)
     ? Object.fromEntries(
         Object.entries(raw.phaseAliases).filter((entry): entry is [string, string] => typeof entry[1] === "string")
@@ -142,6 +146,9 @@ function mergeConfig(raw: unknown): AppConfig {
         security: asNumber(codeQualityWeights.security, DEFAULT_CONFIG.codeQuality.weights.security),
         vulnerability: asNumber(codeQualityWeights.vulnerability, DEFAULT_CONFIG.codeQuality.weights.vulnerability)
       }
+    },
+    copq: {
+      currency: asString(copq.currency, DEFAULT_CONFIG.copq.currency)
     }
   };
 }

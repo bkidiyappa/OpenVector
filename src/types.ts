@@ -114,6 +114,12 @@ export type ReleaseMilestone = {
   date: string;
 };
 
+export type CopqRateRow = {
+  detection_phase: string;
+  severity: string;
+  unit_cost: number;
+};
+
 export type LoadedData = {
   teams: TeamRow[];
   sprints: SprintRow[];
@@ -122,6 +128,7 @@ export type LoadedData = {
   codeCoverage: CodeCoverageRow[];
   codeQuality: CodeQualityRow[];
   releasePlans: ReleasePlanRow[];
+  copqRates: CopqRateRow[];
   messages: ValidationMessage[];
 };
 
@@ -197,6 +204,66 @@ export type ReleaseDailyTrend = {
   days: DailyOpenClosePoint[];
 };
 
+export type CopqPhaseBucket = {
+  phase: string;
+  cost: number;
+  count: number;
+};
+
+export type CopqSeverityBucket = {
+  key: string;
+  label: string;
+  cost: number;
+  count: number;
+};
+
+export type CopqStackRow = {
+  key: string;
+  label: string;
+  cost: number;
+  count: number;
+  byPhase: CopqPhaseBucket[];
+};
+
+export type CopqTeamBucket = CopqStackRow & {
+  product: string;
+  team: string;
+};
+
+export type CopqProductBucket = CopqStackRow & {
+  product: string;
+  organization: string;
+  vertical: string;
+  teams: CopqTeamBucket[];
+  byRelease: CopqStackRow[];
+};
+
+export type CopqReleaseBucket = CopqStackRow & {
+  release: string;
+  products: CopqProductBucket[];
+};
+
+export type CopqDailyPoint = {
+  date: string;
+  cost: number;
+  count: number;
+  byPhase: CopqPhaseBucket[];
+};
+
+export type CopqMetrics = {
+  total: number;
+  currency: string;
+  pricedCount: number;
+  omittedCount: number;
+  byPhase: CopqPhaseBucket[];
+  bySeverity: CopqSeverityBucket[];
+  byRelease: CopqReleaseBucket[];
+  byProduct: CopqProductBucket[];
+  dailyTrend: CopqDailyPoint[];
+  notes: string[];
+  trend: Trend | null;
+};
+
 export type QualityMetrics = {
   defectLeakage: number | null;
   openDefects: number;
@@ -216,6 +283,7 @@ export type QualityMetrics = {
   byPhase: { phase: string; count: number }[];
   byAge: { bucket: string; count: number }[];
   internalVsExternal: { key: "internal" | "external"; count: number }[];
+  copq: CopqMetrics | null;
   notes: string[];
   trends: {
     defectLeakage: Trend | null;
@@ -273,6 +341,14 @@ export type DefectDrillFilter = {
   statusName?: string;
   release?: string;
   productionOnly?: boolean;
+  product?: string;
+  team?: string;
+  copq?: boolean;
+  copqChart?: boolean;
+  copqProductTrend?: boolean;
+  copqRelease?: string;
+  copqProduct?: string;
+  copqTeam?: string;
 };
 
 export type DefectListItem = {
@@ -293,6 +369,7 @@ export type DefectListItem = {
   status: string;
   ageDays: number;
   ageBucket: string;
+  estimatedCost?: number | null;
 };
 
 export type MaturityTeamBreakdown = {
@@ -373,6 +450,7 @@ export type OverviewMetrics = {
     defectLeakage: number | null;
     openDefects: number;
     customerDefects: number;
+    copq: Pick<CopqMetrics, "total" | "currency" | "trend"> | null;
     trends: QualityMetrics["trends"];
   };
   notes: string[];
@@ -410,5 +488,8 @@ export type AppConfig = {
       security: number;
       vulnerability: number;
     };
+  };
+  copq: {
+    currency: string;
   };
 };

@@ -1,0 +1,17 @@
+detection_phase,severity,unit_cost
+Development,Sev1,200
+Development,Sev2,120
+Development,Sev3,60
+Development,Sev4,30
+System Testing,Sev1,800
+System Testing,Sev2,400
+System Testing,Sev3,200
+System Testing,Sev4,80
+UAT,Sev1,2000
+UAT,Sev2,1000
+UAT,Sev3,400
+UAT,Sev4,150
+Production,Sev1,8000
+Production,Sev2,4000
+Production,Sev3,1500
+Production,Sev4,500

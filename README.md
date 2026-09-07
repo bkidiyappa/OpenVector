@@ -2,10 +2,10 @@
 
 **Open-source engineering metrics and intelligence dashboard.**
 
-Turn simple engineering CSV files into productivity, quality, and maturity insights. Data stays on your machine.
+OpenVector is a lightweight, open-source Engineering Health & Intelligence platform that turns engineering data into actionable insights across delivery, quality, testing, code health, release, reliability, and security.
 
 ```text
-CSV → Metric Engine → Dashboard
+Data from different sources → CSV → Metric Engine → Dashboard
 ```
 
 OpenVector is local-first. There is no database, no cloud account, and no individual ranking. Story points and velocity are team trends, not a leaderboard.
@@ -82,7 +82,7 @@ Optional settings include the velocity moving-average window, severity aliases, 
 
 ## CSV format
 
-V1 reads seven files:
+V1 reads these files:
 
 | File | Used for |
 |---|---|
@@ -90,6 +90,7 @@ V1 reads seven files:
 | `sprints.csv` | Capacity, velocity, planned vs completed |
 | `defects.csv` | Leakage, phase, age, severity, internal vs external |
 | `release-plan.csv` | Release milestones on the open/closure trend |
+| `copq-rates.csv` | Phase × severity unit costs for Visible COPQ |
 | `automation.csv` | Automation coverage (maturity) |
 | `code-coverage.csv` | Lines and coverage by org / product / module |
 | `code-quality.csv` | SonarQube maintainability, security, and vulnerability |
@@ -106,18 +107,21 @@ Highlights:
 - **Velocity** = completed story points
 - **SP / capacity day** = completed points ÷ available person-days (not “per developer”)
 - **Defect leakage** = production-phase defects ÷ defects in the current view × 100
+- **Visible COPQ** = Σ unit_cost(phase, severity) for defects in view (optional `copq-rates.csv`)
 - **Quality maturity** = weighted average of normalized component scores (0–10)
 
 ## Dashboards
 
 - **Overview** — executive KPIs and defined trend arrows
 - **Productivity** — capacity, velocity, planned vs completed, and SP / capacity day on one chart
-- **Quality** — leakage, DRE by phase, daily open/closure (with release-plan milestones), status, severity, age
+- **Quality** — leakage, Visible COPQ by release (stacked by phase), DRE by phase, daily open/closure (with release-plan milestones), status, severity, age
 - **Maturity** — raw values, scores, weights, overall band, plus drillable coverage and SonarQube quality trends
 
 Filters (organization, vertical, product, team) apply to every page. Coverage and SonarQube quality are keyed by **module**, not team.
 
 ## Roadmap
+
+The metrics to build, and which are already on the dashboard, are in [docs/roadmap.md](docs/roadmap.md).
 
 V1 is CSV only. Later, keep the metric engine and add sources:
 

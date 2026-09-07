@@ -22,6 +22,7 @@ const emptyQuality: QualityMetrics = {
   byPhase: [],
   byAge: [],
   internalVsExternal: [],
+  copq: null,
   notes: [],
   trends: { defectLeakage: null, openDefects: null, customerDefects: null }
 };

@@ -4,7 +4,7 @@ import { getOverview } from "../api";
 import { useFilters } from "../FilterContext";
 import { MetricCard } from "../components/MetricCard";
 import { NotesList } from "../components/NotesList";
-import { formatNumber, formatPercent } from "../format";
+import { formatCurrency, formatNumber, formatPercent } from "../format";
 import type { OverviewMetrics } from "../../types";
 
 export function ExecutiveDashboard() {
@@ -71,7 +71,7 @@ export function ExecutiveDashboard() {
           />
         </Link>
       </section>
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className={`grid gap-4 ${data.quality.copq ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
         <Link to="/quality" state={{ drill: { productionOnly: true } }} className="block">
           <MetricCard
             label="Defect Leakage"
@@ -86,6 +86,16 @@ export function ExecutiveDashboard() {
         <Link to="/quality" state={{ drill: { origin: "external" } }} className="block">
           <MetricCard label="Customer Defects" value={String(data.quality.customerDefects)} hint="External / customer-reported" />
         </Link>
+        {data.quality.copq ? (
+          <Link to="/quality" state={{ drill: { copq: true } }} className="block">
+            <MetricCard
+              label="Visible COPQ"
+              value={formatCurrency(data.quality.copq.total, data.quality.copq.currency)}
+              hint="Internal and external failure cost"
+              trend={data.quality.copq.trend}
+            />
+          </Link>
+        ) : null}
       </section>
     </div>
   );

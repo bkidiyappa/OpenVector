@@ -23,6 +23,9 @@ export function overviewResponse(data: LoadedData, config: AppConfig, filter: Or
       defectLeakage: quality.defectLeakage,
       openDefects: quality.openDefects,
       customerDefects: quality.customerDefects,
+      copq: quality.copq
+        ? { total: quality.copq.total, currency: quality.copq.currency, trend: quality.copq.trend }
+        : null,
       trends: quality.trends
     },
     notes: [...productivity.notes, ...quality.notes, ...maturity.notes].filter(

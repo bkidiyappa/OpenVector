@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chartTooltipFormatter, formatDecimal } from "../../src/dashboard/format";
+import { chartCurrencyTooltipFormatter, chartTooltipFormatter, formatCurrency, formatDecimal } from "../../src/dashboard/format";
 
 describe("chart values", () => {
   it("rounds decimals to two places", () => {
@@ -14,5 +14,12 @@ describe("chart values", () => {
     expect(chartTooltipFormatter(7.523477622890683, "Score")).toEqual(["7.52", "Score"]);
     expect(chartTooltipFormatter(95.8333333, "DRE")).toEqual(["95.83%", "DRE"]);
     expect(chartTooltipFormatter(-2, "Closed")).toEqual(["2", "Closed"]);
+  });
+
+  it("formats currency with the configured ISO code", () => {
+    expect(formatCurrency(8000, "USD")).toBe("$8,000");
+    expect(formatCurrency(150.5, "USD")).toBe("$150.50");
+    expect(formatCurrency(null, "USD")).toBe("—");
+    expect(chartCurrencyTooltipFormatter("USD")(8000, "Cost")).toEqual(["$8,000", "Cost"]);
   });
 });

@@ -1,6 +1,17 @@
 # Metrics
 
-OpenVector turns CSV files into team-level engineering metrics. All formulas live in `src/metrics/`. Dashboard pages only render API results; they never recalculate business metrics.
+OpenVector metrics provide a structured view of engineering health, delivery effectiveness and product quality across teams, products and organizations.
+The purpose of these metrics is not simply to report numbers. It is to help engineering leaders understand:
+•	What are we delivering?
+•	How predictable is our delivery?
+•	How efficiently does work flow through engineering?
+•	How effective is our quality engineering system?
+•	How healthy is our codebase?
+•	How safely and frequently can we release?
+•	How reliable is the product in production?
+•	What engineering risks require attention?
+•	Where is engineering health improving or deteriorating?
+
 
 Use this page to learn **what each number is**, **where it appears**, and **how to infer** whether the signal is healthy, mixed, or a problem. Images are the individual cards and charts from the sample files in `/data` (Acme / Payments / Checkout and Acme / Travel / Booking).
 
@@ -18,7 +29,7 @@ Filters at the top (organization → vertical → product → team) apply to eve
 | Stable | Change is inside ±5% |
 | Declining | Change is more than 5% in the undesired direction |
 
-Desired direction: higher is better for velocity, SP / capacity day, and maturity. Lower is better for defect leakage.
+Desired direction: higher is better for velocity, SP / capacity day, and maturity. Lower is better for defect leakage and Visible COPQ.
 
 Charts show data labels on bars and lines by default. Use **Hide data labels** / **Show data labels** on a chart if the plot is crowded. Use **Download PNG** to save the plot. Click a bar, point, or KPI to drill down. Click a breadcrumb to go back.
 
@@ -75,6 +86,14 @@ The Overview page is the executive summary. Each card links to the page that own
 **What it is.** Count of defects with `customer_reported = true` (external). All others are internal.
 
 **How to infer it.** Customer-found defects are a user-visible quality signal. A few Sev1 customer defects matter more than many internal Sev4s. Use this with leakage: customer + production is the worst combination.
+
+### Visible COPQ
+
+![Visible COPQ card](images/overview-visible-copq.png)
+
+**What it is.** Internal plus external failure cost (rework and escaped defects), not prevention or appraisal. Each defect in the current view is priced from `copq-rates.csv` as `unit_cost(detection_phase, severity)`. Those costs are summed. Currency comes from `copq.currency` in `openvector.yaml` (default USD). If the rates file is missing, this card is omitted.
+
+**How to infer it.** Lower is better. A large total with a tall Production share means expensive escapes, not just a high defect count. Click through to Quality: the stacked release chart shows where cost sits over time, then drill product and team. The Overview number mixes every release in the filter.
 
 ---
 
@@ -222,6 +241,37 @@ Buckets: 0–7, 8–14, 15–30, 31–60, 61–90, >90 days.
 
 **How to infer it.** Internal-heavy and early-phase is a working quality process. Customer-heavy, especially in Production, is escaped customer pain. Click a bar to list those defects.
 
+### Visible COPQ
+
+![Visible COPQ card](images/quality-visible-copq.png)
+
+Visible COPQ is internal + external **failure** cost: rework found in Development, System Testing, or UAT, plus escaped defects found in Production. It does not include prevention or appraisal.
+
+```text
+Visible COPQ = Σ unit_cost(detection_phase, severity) for defects in view
+Bucket COPQ  = count(bucket) × unit_cost(bucket)
+```
+
+`unit_cost` comes from optional `copq-rates.csv` (phase × severity). Phases are canonical names after aliases. Severity accepts CSV labels (`Sev1`) or groups (`critical`). Currency is `copq.currency` in `openvector.yaml`. A defect with no matching rate is omitted from cost — OpenVector does not invent a zero. If the file is absent, COPQ cards and charts are omitted.
+
+The trend arrow compares the latest release in view with the previous release. Lower is better.
+
+**How to infer it.**
+
+- Production / Critical bars are the expensive escapes. A large Development / Low total can still be cheap.
+- A shrinking Production slice from one release to the next means fewer expensive escapes, not that old defects got cheaper.
+- Click the KPI to list priced defects. Click a release, then a product (over time), then a team, to see those rows. Click **All releases** to return.
+
+### Visible COPQ by Release
+
+![Visible COPQ by Release](images/quality-copq-release.png)
+
+Stacked bars are Visible COPQ for each `found_in_release`, with one stack per detection phase. This chart sits at the bottom of Quality and always uses every release in the current org filter.
+
+Click a release to see products, click a product for that product’s cost over releases, then click a release to see teams. Click a team to list defects. Breadcrumb: All releases / release / product / team.
+
+**How to infer it.** Read the stack, not only the total height. A taller R12 bar that is mostly Development is cheaper rework. A shorter bar with a large Production slice is more expensive escapes. After you click a product, the release axis is that product’s trend — compare Checkout vs Booking before treating an org-wide spike as everyone’s problem.
+
 ---
 
 ## Maturity
@@ -328,6 +378,7 @@ Arrows use the previous comparable value only. No previous value means no arrow.
 
 - Velocity and SP / capacity day: latest sprint vs the sprint before it
 - Defect leakage: current view vs the previous release in that view. On Overview (all releases) the current value is the portfolio rate, so prefer the Quality phase/DRE chart for release-to-release change.
+- Visible COPQ: latest release vs the previous release in that view (lower is better)
 - Maturity: shown when a previous overall score is available
 
 A change inside ±5% is **stable**, even if the raw number ticked up or down.
@@ -342,4 +393,4 @@ A change inside ±5% is **stable**, even if the raw number ticked up or down.
 - Story points per developer
 - Forecasts or invented values when a CSV is missing
 
-If a file is absent (`automation.csv`, `code-coverage.csv`, `code-quality.csv`, `release-plan.csv`), related cards and charts are omitted or unmarked. See [data-format.md](data-format.md) for columns and [openvector.yaml](../openvector.yaml) for weights, phases, and severity aliases.
+If a file is absent (`automation.csv`, `code-coverage.csv`, `code-quality.csv`, `release-plan.csv`, `copq-rates.csv`), related cards and charts are omitted or unmarked. See [data-format.md](data-format.md) for columns and [openvector.yaml](../openvector.yaml) for weights, phases, and severity aliases.

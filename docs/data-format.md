@@ -38,6 +38,27 @@ organization,vertical,product,release,dev_start,dev_complete,test_start,test_com
 
 One row per product release. Milestone dates may be empty if that event has not happened yet. When a release is selected on Quality, these dates appear as vertical markers on the Open / Closure Daily Trend chart.
 
+## copq-rates.csv
+
+```text
+detection_phase,severity,unit_cost
+```
+
+Optional. If this file is absent, Visible COPQ cards and charts are omitted.
+
+- `detection_phase` uses canonical names after aliases (Development, System Testing, UAT, Production).
+- `severity` accepts CSV labels (`Sev1`) or groups (`critical`).
+- `unit_cost` is a number in the currency from `copq.currency` in `openvector.yaml` (default USD). OpenVector does not invent rates. A defect with no matching row is omitted from cost.
+
+Sample matrix (illustrative; later phases cost more, Critical more than Low):
+
+| Phase | Critical | High | Medium | Low |
+|---|---:|---:|---:|---:|
+| Development | 200 | 120 | 60 | 30 |
+| System Testing | 800 | 400 | 200 | 80 |
+| UAT | 2000 | 1000 | 400 | 150 |
+| Production | 8000 | 4000 | 1500 | 500 |
+
 ## automation.csv
 
 ```text
@@ -78,8 +99,8 @@ Expected columns:
     ...
 ```
 
-Malformed rows are rejected. Optional files (`automation.csv`, `code-coverage.csv`, `code-quality.csv`, `release-plan.csv`) may be absent; related charts or maturity inputs are then omitted.
+Malformed rows are rejected. Optional files (`automation.csv`, `code-coverage.csv`, `code-quality.csv`, `release-plan.csv`, `copq-rates.csv`) may be absent; related charts or maturity inputs are then omitted.
 
 ## Configuration
 
-`openvector.yaml` controls data path, moving-average window, default filters, severity aliases, detection phases, production phases, maturity weights, and SonarQube code-quality weights. See the sample file in the repository root.
+`openvector.yaml` controls data path, moving-average window, default filters, severity aliases, detection phases, production phases, maturity weights, SonarQube code-quality weights, and COPQ currency. See the sample file in the repository root.

@@ -88,6 +88,7 @@ export const CODE_QUALITY_COLUMNS = [
   "security",
   "vulnerability"
 ] as const;
+export const COPQ_RATE_COLUMNS = ["detection_phase", "severity", "unit_cost"] as const;
 
 export const teamRowSchema = z.object({
   organization: z.string().trim().min(1),
@@ -172,4 +173,10 @@ export const codeQualityRowSchema = z.object({
   maintainability: z.coerce.number().min(0).max(10),
   security: z.coerce.number().min(0).max(10),
   vulnerability: z.coerce.number().min(0).max(10)
+});
+
+export const copqRateRowSchema = z.object({
+  detection_phase: z.string().trim().min(1),
+  severity: z.string().trim().min(1),
+  unit_cost: z.coerce.number().nonnegative()
 });

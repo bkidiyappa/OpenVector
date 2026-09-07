@@ -60,3 +60,6 @@ codeQuality:
     maintainability: 0.4
     security: 0.3
     vulnerability: 0.3
+
+copq:
+  currency: USD

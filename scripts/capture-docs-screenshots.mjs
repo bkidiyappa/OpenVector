@@ -59,7 +59,7 @@ async function selectRelease(release) {
   await firstChart.locator("circle.recharts-dot").nth(index).click();
   await page.getByText(`Open / Closure Daily Trend · ${release}`).waitFor();
   await page.getByText("Hide milestones").waitFor();
-  await waitForCharts(6);
+  await waitForCharts(7);
 }
 
 try {
@@ -70,6 +70,7 @@ try {
   await shot("overview-defect-leakage.png", "metric:Defect Leakage");
   await shot("overview-open-defects.png", "metric:Open Defects");
   await shot("overview-customer-defects.png", "metric:Customer Defects");
+  await shot("overview-visible-copq.png", "metric:Visible COPQ");
 
   await open("http://127.0.0.1:3000/productivity", "SP / Capacity Day", 1);
   await shot("productivity-available-capacity.png", "metric:Available Capacity");
@@ -77,14 +78,16 @@ try {
   await shot("productivity-sp-capacity-day.png", "metric:SP / Capacity Day");
   await shot("productivity-velocity-chart.png", "chart:velocity");
 
-  await open("http://127.0.0.1:3000/quality", "Defects by Severity", 6);
+  await open("http://127.0.0.1:3000/quality", "Defects by Severity", 7);
   await shot("quality-defect-leakage.png", "metric:Defect Leakage");
+  await shot("quality-visible-copq.png", "metric:Visible COPQ");
   await shot("quality-phase-dre.png", "chart:phase-dre");
   await shot("quality-daily-trend.png", "chart:daily-trend");
   await shot("quality-status.png", "chart:status");
   await shot("quality-severity.png", "chart:severity");
   await shot("quality-age.png", "chart:age");
   await shot("quality-origin.png", "chart:origin");
+  await shot("quality-copq-release.png", "chart:copq-release");
   await selectRelease("R12");
   await shot("quality-daily-trend-r12.png", "chart:daily-trend");
 
@@ -104,7 +107,10 @@ try {
     "quality.png",
     "quality-release.png",
     "maturity.png",
-    "quality-customer-defects.png"
+    "quality-customer-defects.png",
+    "quality-copq-trend.png",
+    "quality-copq-phase.png",
+    "quality-copq-severity.png"
   ]) {
     const file = path.join(outDir, stale);
     try {

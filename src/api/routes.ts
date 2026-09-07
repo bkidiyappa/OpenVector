@@ -109,7 +109,13 @@ export function registerRoutes(app: Express, config: AppConfig, data: LoadedData
       status,
       statusName: typeof query.statusName === "string" ? query.statusName : undefined,
       release: typeof query.release === "string" ? query.release : undefined,
-      productionOnly: query.productionOnly === "true"
+      productionOnly: query.productionOnly === "true",
+      product: typeof query.product === "string" ? query.product : undefined,
+      team: typeof query.team === "string" ? query.team : undefined,
+      copq: query.copq === "true",
+      copqRelease: typeof query.copqRelease === "string" ? query.copqRelease : undefined,
+      copqProduct: typeof query.copqProduct === "string" ? query.copqProduct : undefined,
+      copqTeam: typeof query.copqTeam === "string" ? query.copqTeam : undefined
     };
     res.json({
       drill,

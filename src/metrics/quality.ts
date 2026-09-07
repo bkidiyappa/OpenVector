@@ -328,6 +328,7 @@ export function calculateQualityMetrics(
     byPhase,
     byAge,
     internalVsExternal,
+    copq: null,
     notes,
     trends: {
       defectLeakage: calculateTrend(previousLeakage, defectLeakage, "lower"),
@@ -378,6 +379,12 @@ export function filterDefectsForDrill(
         return false;
       }
       if (drill.productionOnly && !isProductionPhase(phase, config.productionPhases)) {
+        return false;
+      }
+      if (drill.product && defect.product !== drill.product) {
+        return false;
+      }
+      if (drill.team && defect.team !== drill.team) {
         return false;
       }
       return true;

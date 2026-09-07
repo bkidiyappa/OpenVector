@@ -20,6 +20,23 @@ export function formatPercent(value: number | null | undefined): string {
   return formatDecimal(value, "%");
 }
 
+export function formatCurrency(value: number | null | undefined, currency = "USD"): string {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  const fractionDigits = Number.isInteger(Math.round(value * 100) / 100) ? 0 : 2;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: 2
+    }).format(value);
+  } catch {
+    return `${formatDecimal(value)} ${currency}`;
+  }
+}
+
 export function chartTooltipFormatter(value: unknown, name: unknown): [string, string] {
   const label = name == null ? "" : String(name);
   const numeric = typeof value === "number" ? value : Number(value);
@@ -31,4 +48,15 @@ export function chartTooltipFormatter(value: unknown, name: unknown): [string, s
     return [formatPercent(magnitude), label];
   }
   return [formatNumber(magnitude), label];
+}
+
+export function chartCurrencyTooltipFormatter(currency: string) {
+  return (value: unknown, name: unknown): [string, string] => {
+    const label = name == null ? "" : String(name);
+    const numeric = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(numeric)) {
+      return [String(value ?? ""), label];
+    }
+    return [formatCurrency(numeric, currency), label];
+  };
 }

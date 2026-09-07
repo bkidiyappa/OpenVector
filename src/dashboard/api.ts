@@ -104,7 +104,13 @@ export async function getQualityDefects(filter: FilterState, drill: DefectDrillF
       status: drill.status,
       statusName: drill.statusName,
       release: drill.release,
-      productionOnly: drill.productionOnly ? "true" : undefined
+      productionOnly: drill.productionOnly ? "true" : undefined,
+      product: drill.product,
+      team: drill.team,
+      copq: drill.copq ? "true" : undefined,
+      copqRelease: drill.copqRelease,
+      copqProduct: drill.copqProduct,
+      copqTeam: drill.copqTeam
     })}`
   );
 }

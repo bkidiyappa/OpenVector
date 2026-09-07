@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import type { DefectDrillFilter, DefectListItem, QualityMetrics } from "../../types";
+import type { CopqStackRow, DefectDrillFilter, DefectListItem, QualityMetrics } from "../../types";
 import { getQuality, getQualityDefects } from "../api";
 import { ChartCard, ChartLink } from "../components/ChartCard";
 import { chartLabel } from "../components/ChartValueList";
@@ -22,8 +22,15 @@ import { DataTable } from "../components/DataTable";
 import { MetricCard } from "../components/MetricCard";
 import { NotesList } from "../components/NotesList";
 import { useFilters } from "../FilterContext";
-import { setChartDrill, releaseDrill } from "../defectDrill";
-import { chartTooltipFormatter, formatPercent } from "../format";
+import {
+  releaseDrill,
+  setChartDrill,
+  setCopqProduct,
+  setCopqProductRelease,
+  setCopqRelease,
+  setCopqTeam
+} from "../defectDrill";
+import { chartCurrencyTooltipFormatter, chartTooltipFormatter, formatCurrency, formatPercent } from "../format";
 import { MILESTONE_COLORS } from "../../metrics/release-plan";
 
 type MilestoneLabelProps = {
@@ -82,6 +89,13 @@ const ORIGIN_LABELS: Record<"internal" | "external", string> = {
   external: "Customer Found"
 };
 
+function toStackedBars(rows: CopqStackRow[]) {
+  return rows.map((row) => ({
+    ...row,
+    ...Object.fromEntries(row.byPhase.map((bucket) => [bucket.phase, bucket.cost]))
+  }));
+}
+
 function drillLabel(drill: DefectDrillFilter): string {
   const parts = [
     drill.release,
@@ -91,7 +105,11 @@ function drillLabel(drill: DefectDrillFilter): string {
     drill.ageBucket,
     drill.status,
     drill.statusName,
-    drill.productionOnly ? "production / latest release" : undefined
+    drill.productionOnly ? "production / latest release" : undefined,
+    drill.copq ? "Visible COPQ" : undefined,
+    drill.copqRelease,
+    drill.copqProduct,
+    drill.copqTeam
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(" · ") : "All defects";
 }
@@ -106,6 +124,7 @@ export function QualityDashboard() {
   const [defects, setDefects] = useState<DefectListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const phaseBarClick = useRef(false);
+  const copqBarClick = useRef(false);
   const [showMilestones, setShowMilestones] = useState(true);
   const [showLabels, setShowLabels] = useState({
     phase: true,
@@ -113,7 +132,8 @@ export function QualityDashboard() {
     status: true,
     severity: true,
     age: true,
-    origin: true
+    origin: true,
+    copq: true
   });
   const filterKey = `${filter.organization}|${filter.vertical}|${filter.product}|${filter.team}`;
 
@@ -122,24 +142,32 @@ export function QualityDashboard() {
     setDrill((current) => {
       const next = { ...current };
       delete next.release;
+      delete next.copqChart;
+      delete next.copqProductTrend;
+      delete next.copqRelease;
+      delete next.copqProduct;
+      delete next.copqTeam;
       return next;
     });
   }, [filterKey]);
 
-  const hasDrill = useMemo(
-    () =>
-      Boolean(
-        drill.severity ||
-          drill.phase ||
-          drill.origin ||
-          drill.ageBucket ||
-          drill.status ||
-          drill.statusName ||
-          drill.productionOnly ||
-          drill.release
-      ),
-    [drill]
-  );
+  const hasDrill = useMemo(() => {
+    if (drill.copqChart && !drill.copqTeam) {
+      return false;
+    }
+    return Boolean(
+      drill.severity ||
+        drill.phase ||
+        drill.origin ||
+        drill.ageBucket ||
+        drill.status ||
+        drill.statusName ||
+        drill.productionOnly ||
+        drill.release ||
+        drill.copq ||
+        drill.copqTeam
+    );
+  }, [drill]);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,6 +232,11 @@ export function QualityDashboard() {
     setDrill((current) => {
       const next = { ...current };
       delete next.release;
+      delete next.copqChart;
+      delete next.copqProductTrend;
+      delete next.copqRelease;
+      delete next.copqProduct;
+      delete next.copqTeam;
       return next;
     });
   };
@@ -239,6 +272,181 @@ export function QualityDashboard() {
       ]
     : [{ label: "All releases" }];
 
+  const copqLevel: "releases" | "products" | "product-trend" | "teams" = !data.copq
+    ? "releases"
+    : drill.copqTeam
+      ? "teams"
+      : drill.copqProduct && drill.copqProductTrend
+        ? "product-trend"
+        : drill.copqProduct
+          ? "teams"
+          : drill.copqRelease
+            ? "products"
+            : "releases";
+
+  const copqReleaseRow = data.copq?.byRelease.find((row) => row.release === drill.copqRelease);
+  const copqProductRow = data.copq?.byProduct.find((row) => row.product === drill.copqProduct);
+  const copqProductInRelease = copqReleaseRow?.products.find((row) => row.product === drill.copqProduct);
+  const copqRows: CopqStackRow[] =
+    copqLevel === "products"
+      ? (copqReleaseRow?.products ?? [])
+      : copqLevel === "product-trend"
+        ? (copqProductRow?.byRelease ?? [])
+        : copqLevel === "teams"
+          ? (copqProductInRelease?.teams ?? [])
+          : (data.copq?.byRelease ?? []);
+
+  const resetCopqChart = () => setDrill(selectedRelease ? { release: selectedRelease } : {});
+
+  const copqTrail = data.copq
+    ? [
+        {
+          label: "All releases",
+          onClick: drill.copqRelease || drill.copqProduct ? resetCopqChart : undefined
+        },
+        ...(drill.copqRelease
+          ? [
+              {
+                label: drill.copqRelease,
+                onClick:
+                  drill.copqProduct || drill.copqTeam
+                    ? () => setDrill(setCopqRelease(drill.copqRelease ?? ""))
+                    : undefined
+              }
+            ]
+          : []),
+        ...(drill.copqProduct
+          ? [
+              {
+                label: drill.copqProduct,
+                onClick: drill.copqTeam
+                  ? () => setDrill(setCopqProduct({ copqChart: true, copqRelease: drill.copqRelease }, drill.copqProduct ?? ""))
+                  : undefined
+              }
+            ]
+          : []),
+        ...(drill.copqTeam ? [{ label: drill.copqTeam }] : []),
+        ...(drill.phase && drill.copqChart ? [{ label: drill.phase }] : [])
+      ]
+    : undefined;
+
+  const clickCopqRelease = (release?: string, phase?: string) => {
+    if (!release || !data.copq) {
+      return;
+    }
+    const row = data.copq.byRelease.find((entry) => entry.release === release);
+    if (!row) {
+      return;
+    }
+    if (row.products.length === 1) {
+      const product = row.products[0];
+      if (product.teams.length <= 1) {
+        setDrill(
+          setCopqTeam(
+            { copqChart: true, copqRelease: release, copqProduct: product.product, phase },
+            product.teams[0]?.team ?? product.product,
+            phase
+          )
+        );
+        return;
+      }
+      setDrill({ copqChart: true, copqRelease: release, copqProduct: product.product, phase });
+      return;
+    }
+    setDrill(setCopqRelease(release, phase));
+  };
+
+  const clickCopqProduct = (product?: string, phase?: string) => {
+    if (!product || !data.copq) {
+      return;
+    }
+    const row = data.copq.byProduct.find((entry) => entry.product === product);
+    if (!row) {
+      return;
+    }
+    if (row.byRelease.length <= 1) {
+      const release = drill.copqRelease ?? row.byRelease[0]?.key;
+      const scoped = data.copq.byRelease.find((entry) => entry.release === release)?.products.find((entry) => entry.product === product);
+      if (scoped && scoped.teams.length <= 1) {
+        setDrill(
+          setCopqTeam(
+            { copqChart: true, copqRelease: release, copqProduct: product, phase },
+            scoped.teams[0]?.team ?? product,
+            phase
+          )
+        );
+        return;
+      }
+      setDrill({ copqChart: true, copqRelease: release, copqProduct: product, phase });
+      return;
+    }
+    setDrill(setCopqProduct({ copqChart: true, copqRelease: drill.copqRelease, phase }, product, phase));
+  };
+
+  const clickCopqProductRelease = (release?: string, phase?: string) => {
+    if (!release || !drill.copqProduct || !data.copq) {
+      return;
+    }
+    const scoped = data.copq.byRelease
+      .find((entry) => entry.release === release)
+      ?.products.find((entry) => entry.product === drill.copqProduct);
+    if (scoped && scoped.teams.length <= 1) {
+      setDrill(
+        setCopqTeam(
+          { copqChart: true, copqRelease: release, copqProduct: drill.copqProduct, phase },
+          scoped.teams[0]?.team ?? drill.copqProduct,
+          phase
+        )
+      );
+      return;
+    }
+    setDrill(setCopqProductRelease({ ...drill, copqProduct: drill.copqProduct }, release, phase));
+  };
+
+  const clickCopqTeam = (team?: string, phase?: string) => {
+    if (!team) {
+      return;
+    }
+    setDrill(setCopqTeam(drill, team, phase));
+  };
+
+  const onCopqChartClick = (key?: string, phase?: string) => {
+    if (!key) {
+      return;
+    }
+    if (copqLevel === "releases") {
+      clickCopqRelease(key, phase);
+      return;
+    }
+    if (copqLevel === "products") {
+      clickCopqProduct(key, phase);
+      return;
+    }
+    if (copqLevel === "product-trend") {
+      clickCopqProductRelease(key, phase);
+      return;
+    }
+    clickCopqTeam(key, phase);
+  };
+
+  const copqTitle =
+    copqLevel === "products"
+      ? `Visible COPQ by Product · ${drill.copqRelease}`
+      : copqLevel === "product-trend"
+        ? `Visible COPQ · ${drill.copqProduct}`
+        : copqLevel === "teams"
+          ? `Visible COPQ by Team · ${drill.copqRelease} · ${drill.copqProduct}`
+          : "Visible COPQ by Release";
+
+  const copqHint =
+    copqLevel === "products"
+      ? "Stacked cost by detection phase for this release. Click a product to see its cost over releases."
+      : copqLevel === "product-trend"
+        ? "Cost of this product over releases, stacked by detection phase. Click a release to see teams."
+        : copqLevel === "teams"
+          ? "Stacked cost by detection phase. Click a team to list those defects."
+          : "Cost by release, stacked by detection phase. Click a release to drill into products and teams.";
+
   const labelLink = (key: keyof typeof showLabels) => (
     <ChartLink onClick={() => setShowLabels((current) => ({ ...current, [key]: !current[key] }))}>
       {showLabels[key] ? "Hide data labels" : "Show data labels"}
@@ -254,7 +462,7 @@ export function QualityDashboard() {
         </p>
       </div>
       <NotesList notes={data.notes} />
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className={`grid gap-4 ${data.copq ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
         <button type="button" className="text-left" onClick={() => setDrill(setChartDrill(drill, "productionOnly", true))}>
           <MetricCard
             label="Defect Leakage"
@@ -280,6 +488,21 @@ export function QualityDashboard() {
             active={drill.origin === "external"}
           />
         </button>
+        {data.copq ? (
+          <button type="button" className="text-left" onClick={() => setDrill(setChartDrill({ ...drill, copqChart: undefined }, "copq", true))}>
+            <MetricCard
+              label="Visible COPQ"
+              value={formatCurrency(data.copq.total, data.copq.currency)}
+              hint={
+                selectedRelease
+                  ? `Internal and external failure cost in ${selectedRelease}`
+                  : "Internal and external failure cost in view"
+              }
+              trend={data.copq.trend}
+              active={Boolean(drill.copq)}
+            />
+          </button>
+        ) : null}
       </section>
 
       <ChartCard
@@ -596,6 +819,55 @@ export function QualityDashboard() {
         </ChartCard>
       </div>
 
+      {data.copq ? (
+        <ChartCard
+          docId="copq-release"
+          title={copqTitle}
+          hint={copqHint}
+          trail={copqTrail}
+          actions={labelLink("copq")}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={toStackedBars(copqRows)}
+              margin={{ top: 28, right: 8, left: 0, bottom: 0 }}
+              className="cursor-pointer"
+              onClick={(state) => {
+                if (copqBarClick.current) {
+                  copqBarClick.current = false;
+                  return;
+                }
+                const payload = state?.activePayload?.[0]?.payload as { key?: string } | undefined;
+                onCopqChartClick(payload?.key);
+              }}
+            >
+              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+              <XAxis dataKey="label" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis />
+              <Tooltip formatter={chartCurrencyTooltipFormatter(data.copq.currency)} />
+              <Legend />
+              {data.detectionPhases.map((phase) => (
+                <Bar
+                  isAnimationActive={false}
+                  key={phase}
+                  stackId="copq"
+                  dataKey={phase}
+                  name={phase}
+                  fill={PHASE_BAR_COLORS[phase] ?? "#64748b"}
+                  opacity={!drill.phase || drill.phase === phase ? 1 : 0.35}
+                  label={chartLabel(showLabels.copq, { hideZero: true })}
+                  onClick={(entry) => {
+                    copqBarClick.current = true;
+                    const row = entry as { key?: string; payload?: { key?: string } };
+                    onCopqChartClick(row.key ?? row.payload?.key, phase);
+                  }}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      ) : null}
+
       {hasDrill ? (
         <DataTable<DefectListItem>
           empty="No defects match this drill-down."
@@ -611,7 +883,16 @@ export function QualityDashboard() {
             { key: "status", label: "Status" },
             { key: "found_in_release", label: "Found in" },
             { key: "scheduled_for_release", label: "Scheduled for" },
-            { key: "ageBucket", label: "Age" }
+            { key: "ageBucket", label: "Age" },
+            ...(data.copq
+              ? [
+                  {
+                    key: "estimatedCost" as const,
+                    label: "Est. cost",
+                    render: (row: DefectListItem) => formatCurrency(row.estimatedCost ?? null, data.copq?.currency)
+                  }
+                ]
+              : [])
           ]}
         />
       ) : (

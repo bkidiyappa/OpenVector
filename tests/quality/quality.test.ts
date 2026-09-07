@@ -140,6 +140,21 @@ describe("quality metrics", () => {
     expect(rows.map((row) => row.id)).toEqual(["D1", "D3"]);
   });
 
+  it("filters defects by COPQ product and team", () => {
+    const { config } = loadConfig(".");
+    const rows = filterDefectsForDrill(
+      [
+        defect({ id: "D1", product: "Checkout", team: "Team Alpha", detection_phase: "Production" }),
+        defect({ id: "D2", product: "Checkout", team: "Team Beta", detection_phase: "Production" }),
+        defect({ id: "D3", product: "Booking", team: "Team Gamma", detection_phase: "UAT" })
+      ],
+      config,
+      { product: "Checkout", team: "Team Alpha", phase: "Production" },
+      "2026-09-05"
+    );
+    expect(rows.map((row) => row.id)).toEqual(["D1"]);
+  });
+
   it("counts customer-reported defects as external", () => {
     const { config } = loadConfig(".");
     const result = calculateQualityMetrics(
